@@ -26,7 +26,7 @@ export const registerUser = async (req, res, next) => {
         await user.save({ validateBeforeSave: false });
 
         res.status(201).json({
-            success: true,                    // ← fixed: "ture" → "true"
+            success: true,                    
             accessToken,
             refreshToken,
             user: { _id: user._id, username, email },
@@ -67,7 +67,7 @@ export const loginUser = async (req, res, next) => {
 
 export const refreshAccessToken = async (req, res, next) => {
     try {
-        const incomingRefresh = req.body.refreshToken;   // ← fixed typo
+        const incomingRefresh = req.body.refreshToken;   
         if (!incomingRefresh) {
             throw new ApiError(400, 'Refresh token required');
         }
@@ -75,7 +75,7 @@ export const refreshAccessToken = async (req, res, next) => {
         const decoded = jwt.verify(incomingRefresh, process.env.REFRESH_TOKEN_SECRET);
         const user = await User.findById(decoded._id);
 
-        if (!user || user.refreshToken !== incomingRefresh) {   // ← fixed typo
+        if (!user || user.refreshToken !== incomingRefresh) {   
             throw new ApiError(401, 'Invalid refresh token');
         }
 
@@ -92,5 +92,33 @@ export const refreshAccessToken = async (req, res, next) => {
         });
     } catch (error) {
         next(error);
+    }
+};
+
+export const logoutUser = async (req, res, next) => {
+    try {
+        if (!req.user?._id) {
+            throw new ApiError(401, "Authentication required");
+
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            { $unset: { refreshToken: "" } },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            throw new ApiError(404, "User not found");
+        }
+
+        res.status(200)
+            .json({
+                success: true,
+                message: "Logged out sucessfully"
+            });
+
+    } catch (error) {
+        next(error)
     }
 };
