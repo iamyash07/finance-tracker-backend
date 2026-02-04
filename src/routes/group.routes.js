@@ -4,7 +4,11 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 import {
     createGroup,
     getMyGroups,
-    getGroupById
+    getGroupById,
+    addMember,
+    removeMember,
+    leaveGroup,
+    deleteGroup,
 } from '../controllers/group.controller.js'
 
 const router = express.Router();
@@ -17,6 +21,12 @@ router.use(authMiddleware);
 router.post('/', createGroup);
 router.get('/my-groups', getMyGroups);
 router.get('/:id', getGroupById);
+
+// New member management routes
+router.post('/:groupId/members', addMember);
+router.delete('/:groupId/members/:memberId', removeMember);
+router.post('/:groupId/leave', leaveGroup);
+router.delete('/:groupId', deleteGroup);
 
 
 export default router;
