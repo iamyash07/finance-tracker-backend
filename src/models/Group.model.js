@@ -31,6 +31,13 @@ const groupSchema = new mongoose.Schema(
         },
       },
     ],
+    currency: {
+      type: String,
+      required: [true, 'Currency is required'],
+      enum: ['INR', 'USD', 'EUR', 'GBP', 'AUD', 'CAD', 'Other'], // add more as needed
+      default: 'INR',
+      uppercase: true,
+    },
     avatar: {
       type: String,
       default: '/uploads/default-group.png',
@@ -40,13 +47,13 @@ const groupSchema = new mongoose.Schema(
 );
 
 // Auto-add creator to members - simplified approach
-groupSchema.pre('save', function() {
+groupSchema.pre('save', function () {
   if (this.isNew && this.creator) {
     const creatorId = this.creator.toString();
     const memberExists = this.members.some(
       m => m.user.toString() === creatorId
     );
-    
+
     if (!memberExists) {
       this.members.push({ user: this.creator });
     }
