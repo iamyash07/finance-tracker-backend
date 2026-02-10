@@ -1,6 +1,7 @@
 import User from '../models/User.model.js';
 import ApiError from '../utils/ApiError.js';
 import { uploadAvatar } from '../middlewares/multer.middlewares.js';
+import {cloudinary} from '../config/cloudinary.js';
 
 export const getCurrentUser = async (req, res, next) => {
   try {
@@ -26,36 +27,47 @@ export const getCurrentUser = async (req, res, next) => {
 };
 
 export const updateCurrentUser = [
-  // Multer/Cloudinary middleware – handles file upload
   uploadAvatar,
 
-  // Main handler
   async (req, res, next) => {
     try {
       if (!req.user || !req.user._id) {
         throw new ApiError(401, 'Authentication required');
       }
 
-      const userId = req.user._id.toString();
-      const user = await User.findById(userId);
-
+      const user = await User.findById(req.user._id);
       if (!user) {
         throw new ApiError(404, 'User not found');
       }
 
       const { username } = req.body;
 
-      // Update username if provided
       if (username) {
         user.username = username.trim();
       }
 
-      // Update avatar if a new file was uploaded
       if (req.file) {
-        user.avatar = req.file.path; // Full Cloudinary URL
+        const result = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'finance-tracker/avatars',
+              resource_type: 'image',
+              allowed_formats: ['jpg', 'png', 'jpeg'],
+              // No heavy transformation → faster on Render
+              // transformation: [{ width: 500, height: 500, crop: 'limit' }],
+            },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            }
+          );
+
+          uploadStream.end(req.file.buffer);
+        });
+
+        user.avatar = result.secure_url;
       }
 
-      // If no changes were provided
       if (!username && !req.file) {
         throw new ApiError(400, 'No changes provided (username or avatar required)');
       }

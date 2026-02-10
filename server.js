@@ -14,9 +14,7 @@ import groupRoutes from './src/routes/group.routes.js';
 import expenseRoutes from './src/routes/expense.routes.js';
 import settlementRoutes from './src/routes/settlement.routes.js';
 
-
 dotenv.config();
-
 
 const app = express();
 const server = http.createServer(app);
@@ -24,26 +22,19 @@ const server = http.createServer(app);
 // Initialize Socket.io
 export const io = new Server(server, {
   cors: {
-    origin: '*',  
+    origin: '*',
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     credentials: true,
   },
 });
 
-
 // Auto-create uploads folder if missing
-
 const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('Created uploads folder at:', uploadsDir);
-} else {
-  console.log('Uploads folder exists at:', uploadsDir);
 }
 
-
-console.log('Current working directory:', process.cwd());
-
+// Rate limiting for auth routes
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 20, // 20 requests per IP per window
@@ -51,8 +42,6 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-
-
 
 // Middleware
 app.use('/api/auth', authLimiter);
@@ -72,21 +61,15 @@ app.get('/', (req, res) => {
   });
 });
 
-
 // Routes
-
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/settlements', settlementRoutes);
 
-
-// Global error handler
-
+// Global error handler (last middleware)
 app.use((err, req, res, next) => {
-  console.error('Global error:', err);
-
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal Server Error';
 
@@ -97,29 +80,18 @@ app.use((err, req, res, next) => {
   });
 });
 
-
 // Socket.io connection handling
-
 io.on('connection', (socket) => {
-  console.log(`New client connected: ${socket.id}`);
-
-  // Join group room
   socket.on('joinGroup', (groupId) => {
     socket.join(`group_${groupId}`);
-    console.log(`Socket ${socket.id} joined group_${groupId}`);
   });
 
-  // Leave group room
   socket.on('leaveGroup', (groupId) => {
     socket.leave(`group_${groupId}`);
-    console.log(`Socket ${socket.id} left group_${groupId}`);
   });
 
-  socket.on('disconnect', () => {
-    console.log(`Client disconnected: ${socket.id}`);
-  });
+  socket.on('disconnect', () => {});
 });
-
 
 // Start server
 const PORT = process.env.PORT || 5000;
@@ -127,13 +99,9 @@ const PORT = process.env.PORT || 5000;
 connectDB()
   .then(() => {
     server.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`Test: http://localhost:${PORT}/`);
+      // No console.log in production
     });
   })
   .catch((err) => {
-    console.error('MongoDB connection failed - cannot start server');
-    console.error(err);
     process.exit(1);
   });
