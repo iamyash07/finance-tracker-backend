@@ -1,4 +1,3 @@
-// server.js
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
@@ -14,10 +13,10 @@ import groupRoutes from './src/routes/group.routes.js';
 import expenseRoutes from './src/routes/expense.routes.js';
 import settlementRoutes from './src/routes/settlement.routes.js';
 
-// Load environment variables
+
 dotenv.config();
 
-// Create Express app
+
 const app = express();
 const server = http.createServer(app);
 
@@ -41,12 +40,12 @@ if (!fs.existsSync(uploadsDir)) {
   console.log('Uploads folder exists at:', uploadsDir);
 }
 
-// Debug: show current working directory
+
 console.log('Current working directory:', process.cwd());
 
-// ────────────────────────────────────────────────
+
 // Middleware
-// ────────────────────────────────────────────────
+
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -63,18 +62,18 @@ app.get('/', (req, res) => {
   });
 });
 
-// ────────────────────────────────────────────────
+
 // Routes
-// ────────────────────────────────────────────────
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/settlements', settlementRoutes);
 
-// ────────────────────────────────────────────────
-// Global error handler (must come after all routes)
-// ────────────────────────────────────────────────
+
+// Global error handler
+
 app.use((err, req, res, next) => {
   console.error('Global error:', err);
 
@@ -88,9 +87,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ────────────────────────────────────────────────
+
 // Socket.io connection handling
-// ────────────────────────────────────────────────
+
 io.on('connection', (socket) => {
   console.log(`New client connected: ${socket.id}`);
 
@@ -111,9 +110,8 @@ io.on('connection', (socket) => {
   });
 });
 
-// ────────────────────────────────────────────────
+
 // Start server
-// ────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 
 connectDB()
