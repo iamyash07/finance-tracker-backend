@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
+import rateLimit from 'express-rate-limit';
 
 import connectDB from './src/config/db.js';
 import authRoutes from './src/routes/auth.routes.js';
@@ -43,9 +44,18 @@ if (!fs.existsSync(uploadsDir)) {
 
 console.log('Current working directory:', process.cwd());
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // 20 requests per IP per window
+  message: { success: false, message: 'Too many requests, try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+
 
 // Middleware
-
+app.use('/api/auth', authLimiter);
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
