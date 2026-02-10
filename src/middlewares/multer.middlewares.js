@@ -1,31 +1,26 @@
 import multer from 'multer';
-import path from 'path';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import cloudinary from '../config/cloudinary.js';
 
-// Use **absolute path** based on project root
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        // This is the correct way: uploads folder in project root
-        const uploadPath = path.join(process.cwd(), 'uploads');
-        cb(null, uploadPath);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'finance-tracker/avatars', // optional folder in Cloudinary
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+    transformation: [{ width: 500, height: 500, crop: 'limit' }], // optional resize
+  },
 });
 
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-    } else {
-        cb(new Error('Only images are allowed!'), false);
-    }
-};
-
 const upload = multer({
-    storage,
-    limits: { fileSize: 5 * 1024 * 1024 },   // ← fixed typo: limites → limits
-    fileFilter
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only images are allowed'), false);
+    }
+  },
 });
 
 export const uploadAvatar = upload.single('avatar');
