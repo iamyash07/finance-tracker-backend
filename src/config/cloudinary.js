@@ -1,9 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
+import dotenv from "dotenv";
 
-// Load .env only in development (Render injects env vars directly)
-if (process.env.NODE_ENV !== "production") {
-  import("dotenv").then(dotenv => dotenv.config({ path: "./.env" }));
-}
+// Load .env FIRST (sync, before anything else)
+dotenv.config();
 
 // Configure Cloudinary with environment variables
 cloudinary.config({
@@ -19,7 +18,6 @@ const uploadOnCloudinary = async (fileInput, options = {}) => {
       folder: "finance-tracker/avatars",
       resource_type: "image",
       allowed_formats: ["jpg", "png", "jpeg"],
-      
     };
 
     const finalOptions = { ...defaultOptions, ...options };
@@ -27,7 +25,6 @@ const uploadOnCloudinary = async (fileInput, options = {}) => {
     let result;
 
     if (Buffer.isBuffer(fileInput)) {
-      // Upload from memory buffer (recommended for Render)
       result = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           finalOptions,
@@ -36,14 +33,10 @@ const uploadOnCloudinary = async (fileInput, options = {}) => {
             resolve(result);
           }
         );
-
         stream.end(fileInput);
       });
     } else {
-      // Upload from local file path (fallback/old style)
       result = await cloudinary.uploader.upload(fileInput, finalOptions);
-      // Clean up local file after successful upload
-      require("fs").unlinkSync(fileInput);
     }
 
     return {
@@ -55,7 +48,7 @@ const uploadOnCloudinary = async (fileInput, options = {}) => {
       bytes: result.bytes,
     };
   } catch (error) {
-    // Silent failure – return null in production
+    console.error("Cloudinary upload error:", error.message);
     return null;
   }
 };
