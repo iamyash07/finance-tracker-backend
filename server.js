@@ -21,8 +21,7 @@ const server = http.createServer(app);
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
-  // Add your deployed frontend URL later
-  // 'https://your-frontend.vercel.app',
+  'https://fintracker-bay.vercel.app',
 ]
 
 // Initialize Socket.io
@@ -96,7 +95,7 @@ io.on('connection', (socket) => {
     socket.leave(`group_${groupId}`);
   });
 
-  socket.on('disconnect', () => {});
+  socket.on('disconnect', () => { });
 });
 
 // Start server
