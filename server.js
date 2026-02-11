@@ -18,11 +18,17 @@ dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  // Add your deployed frontend URL later
+  // 'https://your-frontend.vercel.app',
+]
 
 // Initialize Socket.io
 export const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     credentials: true,
   },
